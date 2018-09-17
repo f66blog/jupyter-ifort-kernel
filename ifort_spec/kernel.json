@@ -1,0 +1,11 @@
+{
+  "argv": [
+    "python",
+    "-m",
+    "jupyter_ifort_kernel",
+    "-f",
+    "{connection_file}"
+  ],
+  "display_name": "Intel Fortran",
+  "language": "Fortran"
+}
