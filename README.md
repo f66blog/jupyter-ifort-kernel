@@ -20,7 +20,10 @@ Shamelessly hacked together from ...
  * `cd jupyter-ifort-kernel`
  * `jupyter-kernelspec install ifort_spec`
  * `jupyter notebook` or `jupyter lab`
- 
+
+### Example notebook
+ * [example.ipynb](https://github.com/f66blog/jupyter-ifort-kernel/blob/master/example/example.ipynb)
+It seems BMP files aren't shown ??
 
 ## License
 
