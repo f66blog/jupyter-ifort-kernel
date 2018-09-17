@@ -138,7 +138,7 @@ class ifortKernel(Kernel):
                   'compiler': ['ifort', '.f90'],
                   'fig': False,
                   'fig_arg': [],
-                  'picture': [],
+                  'image': [],
                  }
         
         for line in code.splitlines():
@@ -155,10 +155,10 @@ class ifortKernel(Kernel):
                     for i, item in enumerate(shsplit(value)):
                         magics[key][i] = item
                 elif key in ['fig']:  
-                    magics['fig'] = True
+                    magics[key] = True
                     magics['fig_arg'] = value
-                elif key in ['picture']:  
-                    magics['picture'] = shsplit(value)
+                elif key in ['image']:  
+                    magics[key] = shsplit(value)
                 else:
                     pass # need to add exception handling
         return magics
@@ -190,10 +190,10 @@ class ifortKernel(Kernel):
             self.send_response(self.iopub_socket, 'display_data', {'data':_data, 'metadata':{}})
             return {'status': 'ok', 'execution_count': self.execution_count, 'payload': [],
                 'user_expressions': {}}
-        elif magics['picture'] != []:
+        elif magics['image'] != []:
             from base64 import b64encode
                           
-            for file_name in magics['picture']: 
+            for file_name in magics['image']: 
                 if path.exists(file_name):
                     _, ext = os.path.splitext(file_name)
                     ext = ext[1:]
