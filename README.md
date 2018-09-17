@@ -9,7 +9,7 @@ Shamelessly hacked together from ...
 
 ## Manual installation
 
- * Make sure you have the following requirements installed:
+ * Requirements: 
   * ifort or gfortran (or gcc)
   * jupyter 
   * python 3 with matplotlib/numpy
@@ -19,7 +19,7 @@ Shamelessly hacked together from ...
  * `pip install -e --user jupyter-ifort-kernel`
  * `cd jupyter-ifort-kernel`
  * `jupyter-kernelspec install ifort_spec`
- * `jupyter notebook
+ * `jupyter notebook` or `jupyter lab`
  
 
 ## License
