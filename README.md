@@ -23,7 +23,8 @@ Shamelessly hacked together from ...
 
 ### Example notebook
  * [example.ipynb](https://github.com/f66blog/jupyter-ifort-kernel/blob/master/example/example.ipynb)
-It seems BMP files aren't shown ??
+
+It seems that GIF/BMP files aren't shown.??
 
 ## License
 
