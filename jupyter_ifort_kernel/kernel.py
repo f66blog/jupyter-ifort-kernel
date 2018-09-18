@@ -84,7 +84,7 @@ class ifortKernel(Kernel):
   #      mastertemp = tempfile.mkstemp(suffix='.out')
   #      os.close(mastertemp[0])
   #      self.master_path = mastertemp[1]
-        self.master_path = os.getcwd() + '/tmp'
+        self.master_path = os.getcwd() + '/temp'
         if os.path.isdir(self.master_path):
             pass
         else:
@@ -95,7 +95,8 @@ class ifortKernel(Kernel):
         """Remove all the temporary files created by the kernel"""
         for file in self.files:
             os.remove(file)
-        os.rmdir(self.master_path)
+        if os.path.isdir(self.master_path):
+            os.rmdir(self.master_path)
 
 
     def new_temp_file(self, **kwargs):
@@ -123,10 +124,14 @@ class ifortKernel(Kernel):
 
 
     def compile_with_fortran(self, compiler, source_filename, binary_filename, fcflags=None, ldflags=None):
-        return self.create_jupyter_subprocess([compiler, source_filename] +
-                                              fcflags +
-                                              ['-o', binary_filename] +
-                                              ldflags)
+#        if '-c' in ldflags:                                                                   #windows ifort
+#            text = [compiler, source_filename] + fcflags + ['-nologo'] + ldflags              #windows ifort
+#        else:                                                                                 #windows ifort
+#            src, _ = os.path.splitext(source_filename)                                        #windows ifort
+#            text = [compiler, source_filename] + fcflags + ['-o', src, '-nologo'] + ldflags   #windows ifort
+        
+        text = [compiler, source_filename] + fcflags + ['-o', binary_filename] + ldflags      # Linux/WSL
+        return self.create_jupyter_subprocess(text)                                        
 
     
     def _filter_magics(self, code):
@@ -143,7 +148,7 @@ class ifortKernel(Kernel):
         
         for line in code.splitlines():
             if line.strip().startswith('%'):
-                key, value = line.strip().strip('%').split(":", 2)
+                key, value = line.strip().strip('%').split(":", 1)
                 key = key.lower()
              
                 if key in ['ldflags', 'fcflags', 'args']:
@@ -170,26 +175,34 @@ class ifortKernel(Kernel):
         magics = self._filter_magics(code) 
              
         if magics['fig']:
-            from matplotlib import use
-            use('Agg')
-            import matplotlib.pyplot as plt
-            import numpy as np
-            from base64 import b64encode
-            from io import BytesIO
+            try: 
+                from matplotlib import use
+                use('Agg')
+                import matplotlib.pyplot as plt
+                import numpy as np
+                from base64 import b64encode
+                from io import BytesIO
             
-            _fig = eval('plt.figure(' + magics['fig_arg'] + ')') 
-            for line in code.splitlines():
-                if line.startswith(('%', '%%', '$', '?')):
-                    continue
-                else:
-                    exec(line)
-            _imgdata = BytesIO()
-            _fig.savefig(_imgdata, format='png')
-            _imgdata.seek(0)
-            _data = {'image/png': b64encode(_imgdata.getvalue()).decode('ascii')}
-            self.send_response(self.iopub_socket, 'display_data', {'data':_data, 'metadata':{}})
-            return {'status': 'ok', 'execution_count': self.execution_count, 'payload': [],
-                'user_expressions': {}}
+                _fig = eval('plt.figure(' + magics['fig_arg'] + ')') 
+                for line in code.splitlines():
+                    if line.startswith(('%', '%%', '$', '?')):
+                        continue
+                    elif line.strip().startswith(('_fig')):
+                        _, rhs = line.strip().strip('%').split("=", 1)
+                        _fig = eval(rhs)
+                    else:
+                        exec(line)
+                _imgdata = BytesIO()
+                _fig.savefig(_imgdata, format='png')
+                _imgdata.seek(0)
+                _data = {'image/png': b64encode(_imgdata.getvalue()).decode('ascii')}
+                self.send_response(self.iopub_socket, 'display_data', {'data':_data, 'metadata':{}})
+            except Exception as e:
+                self._write_to_stderr("[ifort kernel]{}".format(e))
+            finally:
+                return {'status': 'ok', 'execution_count': self.execution_count, 'payload': [],
+                    'user_expressions': {}}
+
         elif magics['image'] != []:
             from base64 import b64encode
                           
@@ -213,9 +226,14 @@ class ifortKernel(Kernel):
                          continue
                     source_file.write(line + '\n')
                 source_file.flush()
-                with self.new_temp_file(suffix='.out', dir=tmpdir) as binary_file:
-                    p = self.compile_with_fortran(magics['compiler'][0], source_file.name, 
-                        binary_file.name, magics['fcflags'], magics['ldflags'])
+#                with self.new_temp_file(suffix='.obj', dir=tmpdir) as binary_file:          # windows ifort
+#                    p = self.compile_with_fortran(magics['compiler'][0], source_file.name,  # windows ifort  
+#                        binary_file.name, magics['fcflags'], magics['ldflags'])             # windows ifort
+                
+                with self.new_temp_file(suffix='.out', dir=tmpdir) as binary_file:           # Linux/WSL
+                    p = self.compile_with_fortran(magics['compiler'][0], source_file.name,   # Linux/WSL 
+                        binary_file.name, magics['fcflags'], magics['ldflags'])              # Linux/WSL
+
                     while p.poll() is None:
                         p.write_contents()
                     p.write_contents()
@@ -227,18 +245,25 @@ class ifortKernel(Kernel):
                              'user_expressions': {}}
             if magics['module'] != []:
                 tmp = magics['module']
-                mod_name = tmp[0] + ".o"
-                copyfile(binary_file.name, mod_name)
+#                mod_name = tmp[0] + ".obj"                         # windows ifort
+#                src, _ = os.path.splitext(source_file.name)        # windows ifort
+#                copyfile(src[-11:] + '.obj', mod_name)      # windows ifort
+#                os.remove(src[-11:] + '.obj')                      # windows ifort
+                mod_name = tmp[0] + ".o"                           # Linux/WSL
+                copyfile(binary_file.name, mod_name)               # Linux/WSL
                 self._write_to_stderr("[ifort kernel] module objects created successfully: {}".format(mod_name))
                 return {'status': 'ok', 'execution_count': self.execution_count, 'payload': [], 'user_expressions': {}}
                 
-#            src, _ = os.path.splitext(source_file.name)  # windows ifort      
-            p = self.create_jupyter_subprocess(binary_file.name)
-#            os.remove(src[-11:] + '.obj') # windows ifort
+#            src, _ = os.path.splitext(source_file.name)            # windows ifort
+#            exe_file = src + '.exe'                                # windows ifort
+#            p = self.create_jupyter_subprocess(exe_file)           # windows ifort
+#            os.remove(src[-11:] + '.obj')                          # windows ifort
+            p = self.create_jupyter_subprocess(binary_file.name)   # Linux/WSL
             while p.poll() is None:
                 p.write_contents()
             p.write_contents()
-#            os.remove(src + '.exe') # windows ifort               
+            
+#            os.remove(exe_file)                                    # windows ifort               
          
         if p.returncode != 0:
             self._write_to_stderr("[ifort kernel] Executable exited with code {}".format(p.returncode))
