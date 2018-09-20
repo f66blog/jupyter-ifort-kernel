@@ -1,4 +1,4 @@
-# Simple Fortran kernel for Jupyter (with Matplotlib)  
+# Simple Fortran kernel for Jupyter  
 
 Shamelessly hacked together from ... 
  * [jupyter-fortran-kernel](https://github.com/ZedThree/jupyter-fortran-kernel)
@@ -9,7 +9,7 @@ Shamelessly hacked together from ...
 
 ## Manual installation
 
-### Requirements: 
+ * Requirements: 
   * ifort or gfortran (or gcc)
   * jupyter 
   * python 3 with matplotlib/numpy
@@ -21,7 +21,7 @@ Shamelessly hacked together from ...
  * `jupyter-kernelspec install ifort_spec`
  * `jupyter notebook` or `jupyter lab`
 
-## Example notebook
+### Example notebook
  * [example.ipynb](https://github.com/f66blog/jupyter-ifort-kernel/blob/master/example/example.ipynb)
 
 It seems that GIF/BMP files aren't shown.??
