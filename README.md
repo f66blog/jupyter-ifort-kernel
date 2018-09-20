@@ -1,4 +1,10 @@
+<<<<<<< HEAD
 # Simple Fortran kernel for Jupyter  
+=======
+# Simple Fortran kernel for Jupyter 
+
+**Matplotlib ready Fortran Kernel (intel/gnu)**  
+>>>>>>> 695e5067136617d8b41486e16d0b062dcbaf390a
 
 Shamelessly hacked together from ... 
  * [jupyter-fortran-kernel](https://github.com/ZedThree/jupyter-fortran-kernel)

@@ -1,11 +1,11 @@
 {
   "argv": [
-    "python",
+    "python3",
     "-m",
     "jupyter_ifort_kernel",
     "-f",
     "{connection_file}"
   ],
-  "display_name": "Intel Fortran",
+  "display_name": "gfortran-8",
   "language": "Fortran"
 }
