@@ -23,7 +23,7 @@ Shamelessly hacked together from ...
  * `jupyter-kernelspec install ifort_spec`
  * `jupyter notebook` or `jupyter lab`
 
-### Example notebook
+### Example notebook [![Binder](https://mybinder.org/badge.svg)](https://mybinder.org/v2/gh/f66blog/binder_test/master?filepath=examples%2Fexample.ipynb)
  * [example.ipynb](https://github.com/f66blog/jupyter-ifort-kernel/blob/master/example/example.ipynb)
 
 It seems that GIF/BMP files aren't shown.??
