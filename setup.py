@@ -6,7 +6,7 @@ setup(name='jupyter_ifort_kernel',
       author='f66blog',
       author_email='fortran667790@gmail.com',
       url='https://github.com/f66blog/jupyter-ifort-kernel/',
-      download_url='https://github.com/ZedThree/jupyter-fortran-kernel/tarball/0.1.0',
+      download_url='https://github.com/f66blog/jupyter-ifort-kernel/tarball/0.1.0',
       license='MIT',
       classifiers=[
           'Development Status :: 3 - Alpha',
