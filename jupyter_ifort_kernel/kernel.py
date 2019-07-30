@@ -144,6 +144,8 @@ class ifortKernel(Kernel):
                   'fig': False,
                   'fig_arg': [],
                   'image': [],
+                  'py': [],
+                  'writefile': [],
                  }
         
         for line in code.splitlines():
@@ -151,7 +153,7 @@ class ifortKernel(Kernel):
                 key, value = line.strip().strip('%').split(":", 1)
                 key = key.lower()
              
-                if key in ['ldflags', 'fcflags', 'args']:
+                if key in ['ldflags', 'fcflags', 'args', 'writefile']:
                     magics[key] = shsplit(value)
                 elif key in ['module']:  
                     magics[key] = shsplit(value)
@@ -164,6 +166,8 @@ class ifortKernel(Kernel):
                     magics['fig_arg'] = value
                 elif key in ['image']:  
                     magics[key] = shsplit(value)
+                elif key in ['py']:  
+                    magics[key] = True
                 else:
                     pass # need to add exception handling
         return magics
@@ -190,13 +194,38 @@ class ifortKernel(Kernel):
                     elif line.strip().startswith(('_fig')):
                         _, rhs = line.strip().strip('%').split("=", 1)
                         _fig = eval(rhs)
+                    elif line.strip() == 'print':
+                        self._write_to_stdout('\n')    
+                    elif line.strip().startswith(('print')):
+                        _, rhs = line.strip().strip('%').split("t ", 1)
+                        self._write_to_stdout(str(eval(rhs)) + '\n')    
                     else:
                         exec(line)
+
                 _imgdata = BytesIO()
                 _fig.savefig(_imgdata, format='png')
                 _imgdata.seek(0)
                 _data = {'image/png': b64encode(_imgdata.getvalue()).decode('ascii')}
                 self.send_response(self.iopub_socket, 'display_data', {'data':_data, 'metadata':{}})
+            except Exception as e:
+                self._write_to_stderr("[ifort kernel]{}".format(e))
+            finally:
+                return {'status': 'ok', 'execution_count': self.execution_count, 'payload': [],
+                    'user_expressions': {}}
+
+        elif magics['py']:
+            try: 
+                for line in code.splitlines():
+                    if line.startswith(('%', '%%', '$', '?')):
+                        continue
+                    elif line.strip() == 'print':
+                        self._write_to_stdout('\n')    
+                    elif line.strip().startswith(('print')):
+                        _, rhs = line.strip().strip('%').split("t ", 1)
+                        self._write_to_stdout(str(eval(rhs)) + '\n')
+                    else:
+                        exec(line)
+
             except Exception as e:
                 self._write_to_stderr("[ifort kernel]{}".format(e))
             finally:
@@ -218,6 +247,19 @@ class ifortKernel(Kernel):
                     self.send_response(self.iopub_socket, 'display_data',{'data':data,'metadata':{}})
             return {'status': 'ok', 'execution_count': self.execution_count, 'payload': [],
                     'user_expressions': {}}
+
+        elif magics['writefile'] != []:
+            self._write_to_stderr("write to file:")
+            self._write_to_stderr(magics['writefile'][0])
+            with open(magics['writefile'][0], 'w') as write_file:
+                for line in code.splitlines():
+                    if line.startswith(('%writefile')):
+                         continue
+                    write_file.write(line + '\n')
+                write_file.flush()
+            return {'status': 'ok', 'execution_count': self.execution_count, 'payload': [],
+                    'user_expressions': {}}
+
         else:
             tmpdir = self.master_path
             with self.new_temp_file(suffix=magics['compiler'][1], dir=tmpdir) as source_file:
